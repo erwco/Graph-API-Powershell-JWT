@@ -8,7 +8,7 @@ The `New-GraphApiJwt` function is a PowerShell script to authenticate with Micro
 
 1. **PowerShell**: Windows PowerShell 5.0 or higher.
 2. **Microsoft Graph API Access**: You must have access to Microsoft Graph API with application permissions. [How to register an app](https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app)
-3. **Certificate**: The function requires a certificate stored locally. You need to create a self signed certificate as explained in [This section](#create-a-self-signed-certificate).
+3. **Certificate**: The function requires a certificate stored locally. You can create a self signed certificate as explained in [This section](#create-a-self-signed-certificate) or use a proper CA and import it in your Azure app as explained [Here](https://learn.microsoft.com/en-us/entra/identity-platform/howto-create-service-principal-portal#option-1-recommended-upload-a-trusted-certificate-issued-by-a-certificate-authority).
 
 ## Usage
 
@@ -47,3 +47,22 @@ $authorizationHeader = @{Authorization = "Bearer $($accessToken)"}
 $getRequest = Invoke-WebRequest -Method GET -Uri $url -headers $authorizationHeader -ContentType "application/json" -UseBasicParsing
 ```
 ## Create a self signed certificate
+```powershell
+$certName = 'NAME_OF_THE_CERTIFICATE'
+$certPassword = 'VERY_STRONG_PASSWORD_FOR_THE_PRIVATE_KEY'
+$validFor = 2 # Number of year for the certificate validity
+
+
+# Create the certificate
+$cert = New-SelfSignedCertificate -Subject "CN=$certName" -KeyExportPolicy Exportable -KeySpec Signature -KeyLength 2048 -KeyAlgorithm RSA -HashAlgorithm SHA256  -CertStoreLocation "Cert:\CurrentUser\My" -NotAfter ([datetime]::Now.AddYears($validFor))
+
+# Export public key
+Export-Certificate -Cert $cert -FilePath "C:\Users\$env:USERNAME\Downloads\$($certname)_256_public.cer"
+
+# Export private key
+$secureStringPassword = ConvertTo-SecureString -String $certPassword -Force -AsPlainText
+Export-PfxCertificate -Cert $cert -FilePath "C:\Users\$env:USERNAME\Downloads\$($certname)_256_private.pfx" -Password $secureStringPassword -CryptoAlgorithmOption AES256_SHA256
+
+# Optional to delete the key from your computer
+Remove-Item -Path "Cert:\CurrentUser\My\$($cert.Thumbprint)" -DeleteKey
+```
