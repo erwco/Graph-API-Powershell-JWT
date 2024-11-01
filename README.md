@@ -65,4 +65,6 @@ Export-PfxCertificate -Cert $cert -FilePath "C:\Users\$env:USERNAME\Downloads\$(
 Remove-Item -Path "Cert:\CurrentUser\My\$($cert.Thumbprint)" -DeleteKey
 ```
 2 Import the certificate in the user's store
-
+```powershell
+Import-PfxCertificate -FilePath "PATH.pfx" -CertStoreLocation Cert:\CurrentUser\My -Password $(ConvertTo-SecureString -AsPlainText 'VERY_STRONG_PASSWORD_FOR_THE_PRIVATE_KEY' -Force)
+```
