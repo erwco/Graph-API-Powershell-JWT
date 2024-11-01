@@ -1,19 +1,14 @@
 # New-GraphApiJwt PowerShell Function
 
 ## Overview
-
 The `New-GraphApiJwt` function is a PowerShell script to authenticate with Microsoft Graph API using a self-signed JWT (JSON Web Token) created from a local certificate. This function allows you to obtain an access token for Microsoft Graph API using the certificate-based client credential authentication flow.
 
 ## Prerequisites
-
 1. **PowerShell**: Windows PowerShell 5.0 or higher.
 2. **Microsoft Graph API Access**: You must have access to Microsoft Graph API with application permissions. [How to register an app](https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app)
-3. **Certificate**: The function requires a certificate stored locally. You can create a self signed certificate as explained in [This section](#create-a-self-signed-certificate) or use a proper CA and import it in your Azure app as explained [Here](https://learn.microsoft.com/en-us/entra/identity-platform/howto-create-service-principal-portal#option-1-recommended-upload-a-trusted-certificate-issued-by-a-certificate-authority).
-
-## Usage
+3. **Certificate**: The function requires a certificate stored locally. You can use a [self signed certificate](#create-a-self-signed-certificate) or a proper CA and import it in your Azure app as explained [Here](https://learn.microsoft.com/en-us/entra/identity-platform/howto-create-service-principal-portal#option-1-recommended-upload-a-trusted-certificate-issued-by-a-certificate-authority).
 
 ### Parameters
-
 | Parameter       | Description                                                                 |
 |-----------------|-----------------------------------------------------------------------------|
 | `$TenantID`     | Your Azure AD tenant ID.                                                    |
@@ -21,7 +16,6 @@ The `New-GraphApiJwt` function is a PowerShell script to authenticate with Micro
 | `$CertificatePath` | The path to your certificate file, such as `Cert:\CurrentUser\My\{Thumbprint}`. |
 
 ### Function Definition
-
 This function does the following:
 - Retrieves a certificate from the specified local path.
 - Generates a JWT header and payload for the Graph API using the RS256 algorithm.
@@ -29,7 +23,6 @@ This function does the following:
 - Sends a POST request to Microsoft Graph to obtain an access token.
 
 ### Example
-
 ```powershell
 # Define the parameters
 $TenantID = "your-tenant-id"
@@ -39,6 +32,9 @@ $certificateThumbprint ="your-certificate-thumbprint"
 $CERT_PATH = [System.IO.Path]::Combine('Cert:\CurrentUser\My', $certificateThumbprint)
 $CertificatePath = "Cert:\CurrentUser\My\{Thumbprint}"
 
+# Import the module
+Import-Module Import-Module "C:\Scripts\New-GraphApiJwt.psm1"
+
 # Run the function
 $AccessToken = New-GraphApiJwt -TenantID $TenantID -AppId $AppId -CertificatePath $CertificatePath
 
@@ -46,7 +42,9 @@ $url = "https://graph.microsoft.com/v1.0/users/<USER_ID>"
 $authorizationHeader = @{Authorization = "Bearer $($accessToken)"}
 $getRequest = Invoke-WebRequest -Method GET -Uri $url -headers $authorizationHeader -ContentType "application/json" -UseBasicParsing
 ```
+
 ## Create a self signed certificate
+1 Create the certificate
 ```powershell
 $certName = 'NAME_OF_THE_CERTIFICATE'
 $certPassword = 'VERY_STRONG_PASSWORD_FOR_THE_PRIVATE_KEY'
@@ -66,3 +64,5 @@ Export-PfxCertificate -Cert $cert -FilePath "C:\Users\$env:USERNAME\Downloads\$(
 # Optional to delete the key from your computer
 Remove-Item -Path "Cert:\CurrentUser\My\$($cert.Thumbprint)" -DeleteKey
 ```
+2 Import the certificate in the user's store
+
